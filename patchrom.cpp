@@ -24,6 +24,7 @@
 
 #include "patchrom.h"
 #include "hicode.h"
+#include "hicodebt.h"
 
 static unsigned char rombuf[ROMLEN];
 
@@ -153,6 +154,7 @@ int main(int argc, char** argv)
 
 	bool patch_keyirq = true;
 	bool patch_powerup = true;
+	bool sio2bt = false;
 
 	unsigned int sio_address;
 	unsigned int key_address;
@@ -164,10 +166,15 @@ int main(int argc, char** argv)
 	int idx = 1;
 	size_t read_len;
 
-	printf("patchrom V1.30 (c) 2006-2010 Matthias Reichl <hias@horus.com>\n");
+	printf("patchrom V1.31 (c) 2006-2010 Matthias Reichl <hias@horus.com>\n");
 
 	if (argc < 2) {
 		goto usage;
+	}
+
+	if (argv[idx][0] == '-' && argv[idx][1] == 'b') {
+		sio2bt = true;
+		idx++;
 	}
 
 	if (argv[idx][0] == '-' && argv[idx][1] == 'k') {
@@ -241,7 +248,14 @@ int main(int argc, char** argv)
 
 	// copy highspeed SIO code to ROM OS
 	memset(rombuf + HIBASE - ROMBASE, 0, HILEN);
-	memcpy(rombuf + HIBASE - ROMBASE, hipatch_code_rom_bin, hipatch_code_rom_bin_len);
+	if(sio2bt)
+	{
+		memcpy(rombuf + HIBASE - ROMBASE, hipatch_code_rom_bt_bin, hipatch_code_rom_bt_bin_len);
+	}
+	else
+	{
+		memcpy(rombuf + HIBASE - ROMBASE, hipatch_code_rom_bin, hipatch_code_rom_bin_len);
+	}
 
 	// copy old standard SIO code to highspeed SIO code
 	memcpy(rombuf + HISTDSIO - ROMBASE, rombuf + sio_address - ROMBASE, newcode_len);
@@ -253,7 +267,7 @@ int main(int argc, char** argv)
 	memcpy(rombuf + sio_address - ROMBASE, newcode, newcode_len);
 
 	// patch keyboard IRQ handler
-	if (patch_keyirq) {
+	if (patch_keyirq && !sio2bt) {
 		if (memcmp(rombuf + key_address -  ROMBASE, orig_keycode, keycode_len) == 0) {
 			memcpy(rombuf + key_address -  ROMBASE, new_keycode, keycode_len);
 			printf("patched keyboard IRQ handler\n");
@@ -294,8 +308,9 @@ int main(int argc, char** argv)
 
 	return 0;
 usage:
-	printf("usage: patchrom [-k] [-p] original.rom new.rom\n");
+	printf("usage: patchrom [-b] [-k] [-p] original.rom new.rom\n");
 	printf("options:\n");
+	printf("  -b  SIO2BT support (disables keyboard IRQ handler)\n");
 	printf("  -k  don't patch keyboard IRQ handler\n");
 	printf("  -p  don't patch powerup/reset code\n");
 	return 1;
