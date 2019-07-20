@@ -251,6 +251,7 @@ int main(int argc, char** argv)
 	if(sio2bt)
 	{
 		memcpy(rombuf + HIBASE - ROMBASE, hipatch_code_rom_bt_bin, hipatch_code_rom_bt_bin_len);
+		printf("patched SIO2BT highspeed code\n");
 	}
 	else
 	{

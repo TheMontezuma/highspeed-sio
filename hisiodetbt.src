@@ -35,10 +35,6 @@ HISIO
         JMP DOHISIO
 
 ?DOCHK
-        LDA SOUNDR
-        PHA
-        LDA #0
-        STA SOUNDR
 
         LDY #$09
 ?SAVCMD
@@ -131,8 +127,6 @@ HISIO
         INY
         CPY #$0A
         BCC ?RESLP
-        PLA
-        STA SOUNDR
 
         LDA SIOSPEED
         CMP #$FF
