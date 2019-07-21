@@ -77,6 +77,13 @@ static unsigned char new_powerupcode[powerupcode_len] = {
 	PUPCODE & 0xff,
 	PUPCODE >> 8 };
 
+#define origPHRcode_len 4
+static unsigned char origPHRcode[origPHRcode_len] = {
+	0xa5,   // LDA
+	0x08,   // WARMST
+	0xf0,   // BEQ
+	0x25 }; // PHR2
+
 #define CSUM1_ADR 0xC000
 #define CSUM2_ADR 0xFFF8
 
@@ -251,6 +258,10 @@ int main(int argc, char** argv)
 	if(sio2bt)
 	{
 		memcpy(rombuf + HIBASE - ROMBASE, hipatch_code_rom_bt_bin, hipatch_code_rom_bt_bin_len);
+		if (memcmp(rombuf + PHR - ROMBASE, origPHRcode, origPHRcode_len) == 0) {
+			rombuf[PHR - ROMBASE] = 0x60; // RTS
+			printf("disabled PHR (for SIO2BT)\n");
+		}
 		printf("patched SIO2BT highspeed code\n");
 	}
 	else
